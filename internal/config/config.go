@@ -8,8 +8,11 @@ import (
 )
 
 type Config struct {
-	AppPort         string
-	StorageProvider string
+	AppPort               string
+	StorageProvider       string
+	GoogleSpreadsheetID   string
+	GoogleProductsSheet   string
+	GoogleCredentialsFile string
 }
 
 func Load() (*Config, error) {
@@ -19,8 +22,11 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		AppPort:         getEnv("APP_PORT", "8080"),
-		StorageProvider: getEnv("STORAGE_PROVIDER", "spreadsheet"),
+		AppPort:               getEnv("APP_PORT", "8080"),
+		StorageProvider:       getEnv("STORAGE_PROVIDER", "memory"),
+		GoogleSpreadsheetID:   getEnv("GOOGLE_SPREADSHEET_ID", ""),
+		GoogleProductsSheet:   getEnv("GOOGLE_PRODUCTS_SHEET_NAME", "Products"),
+		GoogleCredentialsFile: getEnv("GOOGLE_CREDENTIALS_FILE", "credentials.json"),
 	}
 
 	return cfg, nil
