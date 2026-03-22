@@ -34,3 +34,6 @@ go.work.sum
 # Coverage
 coverage.out
 *.coverprofile
+
+credentials.json
+*.credentials.json
