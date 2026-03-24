@@ -101,7 +101,25 @@ func (r *ProductRepository) FindAll(ctx context.Context, page int, limit int, se
 }
 
 func (r *ProductRepository) FindByID(ctx context.Context, id string) (*domain.Product, error) {
-	return nil, fmt.Errorf("spreadsheet find product by id is not implemented yet: %w", errs.ErrBadRequest)
+	rangeName := fmt.Sprintf("%s!A2:I", r.sheetName)
+
+	resp, err := r.sheetsService.Spreadsheets.Values.
+		Get(r.spreadsheetID, rangeName).
+		Context(ctx).
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get product rows from spreadsheet: %w", err)
+	}
+
+	for _, row := range resp.Values {
+		product := mapRowToProduct(row)
+
+		if product.ID == id {
+			return &product, nil
+		}
+	}
+
+	return nil, fmt.Errorf("product with id %s not found: %w", id, errs.ErrNotFound)
 }
 
 func mapRowToProduct(row []interface{}) domain.Product {
