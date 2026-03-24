@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"pharmacy-storage-be/internal/domain"
 	"pharmacy-storage-be/internal/errs"
@@ -16,6 +17,16 @@ import (
 
 type InventoryMovementHandler struct {
 	inventoryMovementService *service.InventoryMovementService
+}
+
+type StockMovementRequest struct {
+	ProductID      string    `json:"product_id"`
+	ProductBatchID string    `json:"product_batch_id"`
+	Qty            int       `json:"qty"`
+	MovementDate   time.Time `json:"movement_date"`
+	ReferenceNo    string    `json:"reference_no"`
+	Note           string    `json:"note"`
+	CreatedBy      string    `json:"created_by"`
 }
 
 func NewInventoryMovementHandler(inventoryMovementService *service.InventoryMovementService) *InventoryMovementHandler {
@@ -53,6 +64,94 @@ func (h *InventoryMovementHandler) CreateInventoryMovement(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "inventory movement created successfully",
+		"data":    input,
+	})
+}
+
+func (h *InventoryMovementHandler) CreateStockIn(c *gin.Context) {
+	var req StockMovementRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	input := domain.InventoryMovement{
+		ProductID:      req.ProductID,
+		ProductBatchID: req.ProductBatchID,
+		MovementType:   "IN",
+		Qty:            req.Qty,
+		MovementDate:   req.MovementDate,
+		ReferenceNo:    req.ReferenceNo,
+		Note:           req.Note,
+		CreatedBy:      req.CreatedBy,
+	}
+
+	err := h.inventoryMovementService.CreateInventoryMovement(c.Request.Context(), &input)
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+
+		switch {
+		case errors.Is(err, errs.ErrBadRequest):
+			statusCode = http.StatusBadRequest
+		case errors.Is(err, errs.ErrNotFound):
+			statusCode = http.StatusNotFound
+		}
+
+		c.JSON(statusCode, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "stock in created successfully",
+		"data":    input,
+	})
+}
+
+func (h *InventoryMovementHandler) CreateStockOut(c *gin.Context) {
+	var req StockMovementRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	input := domain.InventoryMovement{
+		ProductID:      req.ProductID,
+		ProductBatchID: req.ProductBatchID,
+		MovementType:   "OUT",
+		Qty:            req.Qty,
+		MovementDate:   req.MovementDate,
+		ReferenceNo:    req.ReferenceNo,
+		Note:           req.Note,
+		CreatedBy:      req.CreatedBy,
+	}
+
+	err := h.inventoryMovementService.CreateInventoryMovement(c.Request.Context(), &input)
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+
+		switch {
+		case errors.Is(err, errs.ErrBadRequest):
+			statusCode = http.StatusBadRequest
+		case errors.Is(err, errs.ErrNotFound):
+			statusCode = http.StatusNotFound
+		}
+
+		c.JSON(statusCode, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "stock out created successfully",
 		"data":    input,
 	})
 }

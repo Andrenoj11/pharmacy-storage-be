@@ -6,7 +6,6 @@ import (
 	"pharmacy-storage-be/internal/app"
 	"pharmacy-storage-be/internal/config"
 	"pharmacy-storage-be/internal/handler"
-	memoryrepo "pharmacy-storage-be/internal/repository/memory"
 	"pharmacy-storage-be/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -26,11 +25,19 @@ func main() {
 	productService := service.NewProductService(productRepo)
 	productHandler := handler.NewProductHandler(productService)
 
-	productBatchRepo := memoryrepo.NewProductBatchRepository()
+	productBatchRepo, err := app.NewProductBatchRepository(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	productBatchService := service.NewProductBatchService(productBatchRepo, productRepo)
 	productBatchHandler := handler.NewProductBatchHandler(productBatchService)
 
-	inventoryMovementRepo := memoryrepo.NewInventoryMovementRepository()
+	inventoryMovementRepo, err := app.NewInventoryMovementRepository(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	inventoryMovementService := service.NewInventoryMovementService(
 		inventoryMovementRepo,
 		productRepo,
@@ -59,6 +66,9 @@ func main() {
 	r.POST("/product-batches", productBatchHandler.CreateProductBatch)
 	r.GET("/product-batches", productBatchHandler.GetAllProductBatches)
 	r.GET("/product-batches/:id", productBatchHandler.GetProductBatchByID)
+
+	r.POST("/stock-in", inventoryMovementHandler.CreateStockIn)
+	r.POST("/stock-out", inventoryMovementHandler.CreateStockOut)
 
 	r.POST("/inventory-movements", inventoryMovementHandler.CreateInventoryMovement)
 	r.GET("/inventory-movements", inventoryMovementHandler.GetAllInventoryMovements)
